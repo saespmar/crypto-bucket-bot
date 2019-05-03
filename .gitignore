@@ -105,3 +105,6 @@ venv.bak/
 
 # Exclude Photoshop sources
 *.psd
+
+# Visual Studio Code folder
+*.vscode/
