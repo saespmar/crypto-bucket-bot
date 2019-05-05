@@ -43,7 +43,7 @@ def main():
                 response = coinGecko.simple_price(coin)
 
                 if len(response) > 0:
-                    output = ''
+                    output = 'The current ' + coin + ' price is:\n'
 
                     # Build the response
                     for currency in response:
