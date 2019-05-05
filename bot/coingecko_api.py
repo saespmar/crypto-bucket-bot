@@ -19,3 +19,13 @@ class CoinGeckoRequester:
             return response_json[coin]
         else:
             return []
+
+    def market_chart(self, coin, currency, days):
+        params = {'vs_currency': currency, 'days': days}
+        response = requests.get(self.url + 'coins/' + coin + '/market_chart',
+                                params)
+        response_json = response.json()
+        if 'prices' in response_json:
+            return response_json['prices']
+        else:
+            return []
