@@ -179,6 +179,30 @@ def main():
                 else:
                     output = arguments[1] + ' not found'
 
+            # =========================== SUPPLY =========================== #
+            if arguments[0] == '!supply' and len(arguments) == 2:
+
+                # Convert spaces in the name of the coin into hyphens
+                coin = arguments[1].strip().replace(' ', '-')
+                response = coinGecko.market_data(coin)
+
+                if len(response) > 0:
+                    circulating = response['circulating_supply']
+                    output = 'Currently, there are ' + \
+                             str(circulating) + ' ' + coin + '.'
+                    total = response['total_supply']
+
+                    # Additional information if the crypto has finite supply
+                    if total is not None:
+                        percentage = (circulating/total)*100
+                        output = output + ' The supply stops at ' + \
+                            str(total) + ' ' + coin + '.'
+                        output = output + ' That means ' + str(percentage) + \
+                            '% of ' + coin + ' has been issued.'
+
+                else:
+                    output = arguments[1] + ' not found'
+
             else:
                 output = 'Invalid format'
 
