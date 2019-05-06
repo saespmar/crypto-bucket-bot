@@ -115,6 +115,46 @@ def main():
                 else:
                     output = 'Invalid format'
 
+            # ======================== PRICE CHANGE ======================== #
+            elif arguments[0] == '!price_change' and len(arguments) == 2:
+
+                # price_change[0] -> interval
+                # price_change[1] -> coin
+                price_change = arguments[1].strip().split(" ", 1)
+
+                if len(price_change) == 2:
+                    interval = price_change[0]
+                    allowed_interval = {'1h', '24h', '7d', '14d',
+                                        '30d', '60d', '200d', '1y'}
+                    coin = price_change[1].strip().replace(' ', '-')
+                    if interval in allowed_interval:
+                        response = coinGecko.market_data(coin)
+                        if len(response) > 0:
+                            data = response['price_change_percentage_' +
+                                            interval +
+                                            '_in_currency']
+                            output = 'Price change of ' + coin + \
+                                     ' in the last ' + interval + ':\n'
+
+                            # Build the response
+                            for currency in data:
+                                if currency in sign_map:
+                                    value = str(data[currency]) + '%'
+                                    if data[currency] > 0:
+                                        value = '+' + value
+                                    output = output + \
+                                        emoji_map[currency] + ' ' + \
+                                        value + ' ' + \
+                                        sign_map[currency] + \
+                                        '\n'
+                        else:
+                            output = coin + ' not found'
+                    else:
+                        output = 'Interval must be ' + \
+                                  '1h, 24h, 7d, 24d, 30d, 60d, 200d or 1y'
+                else:
+                    output = 'Invalid format'
+
             else:
                 output = 'Invalid format'
 
