@@ -155,6 +155,30 @@ def main():
                 else:
                     output = 'Invalid format'
 
+            # ========================= MARKET CAP ========================= #
+            if arguments[0] == '!market_cap' and len(arguments) == 2:
+
+                # Convert spaces in the name of the coin into hyphens
+                coin = arguments[1].strip().replace(' ', '-')
+                response = coinGecko.market_data(coin)
+
+                if len(response) > 0:
+                    data = response['market_cap']
+                    output = 'The current ' + coin + ' market cap is:\n'
+
+                    # Build the response
+                    for currency in data:
+                        if currency in sign_map:
+                            value = "{:,}".format(data[currency])
+                            output = output + \
+                                emoji_map[currency] + ' ' + \
+                                value + ' ' + \
+                                sign_map[currency] + \
+                                '\n'
+
+                else:
+                    output = arguments[1] + ' not found'
+
             else:
                 output = 'Invalid format'
 
