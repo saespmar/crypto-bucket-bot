@@ -29,3 +29,14 @@ class CoinGeckoRequester:
             return response_json['prices']
         else:
             return []
+
+    def market_data(self, coin):
+        params = {'tickers': False,
+                  'community_data': False,
+                  'developer_data': False}
+        response = requests.get(self.url + 'coins/' + coin, params)
+        response_json = response.json()
+        if 'market_data' in response_json:
+            return response_json['market_data']
+        else:
+            return []
