@@ -203,6 +203,57 @@ def main():
                 else:
                     output = arguments[1] + ' not found'
 
+            # ========================= INFORMATION ======================== #
+            if arguments[0] == '!info' and len(arguments) == 2:
+
+                # Convert spaces in the name of the coin into hyphens
+                coin = arguments[1].strip().replace(' ', '-')
+                response = coinGecko.coin_info(coin)
+
+                if len(response) > 0:
+                    output = response['name'] + \
+                        ' (' + response['symbol'] + ')\n\n'
+
+                    links = response['links']
+                    twitter_url = links['twitter_screen_name']
+                    if len(twitter_url) > 0:
+                        twitter_url = 'https://twitter.com/' + twitter_url
+
+                    facebook_url = links['facebook_username']
+                    if len(facebook_url) > 0:
+                        facebook_url = 'https://www.facebook.com/' + \
+                            facebook_url
+
+                    telegram_channel = links['telegram_channel_identifier']
+                    if len(telegram_channel) > 0:
+                        telegram_channel = '@' + telegram_channel
+
+                    output = output + \
+                        'Webpage: ' + links['homepage'][0] + '\n' + \
+                        'Twitter: ' + twitter_url + '\n' + \
+                        'Facebook: ' + facebook_url + '\n' + \
+                        'Telegram: ' + telegram_channel + '\n' + \
+                        'Subreddit: ' + links['subreddit_url'] + '\n\n'
+
+                    if response['genesis_date'] is not None:
+                        inverted_date = response['genesis_date']
+                        correct_date = datetime.datetime \
+                            .strptime(inverted_date, '%Y-%m-%d') \
+                            .strftime('%d/%m/%Y')
+                        output = output + \
+                            '- Genesis date: ' + correct_date + '\n'
+
+                    output = output + \
+                        '- CoinGecko rank: ' + \
+                        str(response['coingecko_rank']) + '\n'
+
+                    output = output + \
+                        '- Block time: ' + \
+                        str(response['block_time_in_minutes']) + ' minutes\n'
+
+                else:
+                    output = arguments[1] + ' not found'
+
             else:
                 output = 'Invalid format'
 
