@@ -28,6 +28,8 @@ pip install requests
 
 Execute the `bot/main.py` file and start chatting with the bot!
 
+![Screenshot](images/Screenshot.png "Screenshot")
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
