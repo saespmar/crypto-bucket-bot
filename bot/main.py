@@ -23,6 +23,12 @@ def main():
 
         for message in unread_messages:
             update_id = message['update_id']
+
+            # If the user edits a previous message, ignore it
+            if 'message' not in message:
+                current_offset = update_id + 1
+                continue
+
             chat_id = message['message']['chat']['id']
 
             # Check if it's a text message
