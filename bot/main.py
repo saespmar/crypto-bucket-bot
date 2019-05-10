@@ -84,7 +84,7 @@ def main():
                     for currency in response:
                         output = output + \
                             emoji_map[currency] + ' ' + \
-                            str(response[currency]) + ' ' + \
+                            formatNumber(response[currency]) + ' ' + \
                             sign_map[currency] + \
                             '\n'
 
@@ -142,7 +142,7 @@ def main():
                             output = output + \
                                 str(date) + '\n' + \
                                 tendency + ' ' + \
-                                str(price[1]) + ' ' + \
+                                formatNumber(price[1]) + ' ' + \
                                 sign_map[currency] + '\n\n'
 
                     else:
@@ -174,7 +174,7 @@ def main():
                             # Build the response
                             for currency in data:
                                 if currency in sign_map:
-                                    value = str(data[currency]) + '%'
+                                    value = formatNumber(data[currency]) + '%'
                                     if data[currency] > 0:
                                         value = '+' + value
                                     output = output + \
@@ -204,10 +204,9 @@ def main():
                     # Build the response
                     for currency in data:
                         if currency in sign_map:
-                            value = "{:,}".format(data[currency])
                             output = output + \
                                 emoji_map[currency] + ' ' + \
-                                value + ' ' + \
+                                formatNumber(data[currency]) + ' ' + \
                                 sign_map[currency] + \
                                 '\n'
 
@@ -224,16 +223,17 @@ def main():
                 if len(response) > 0:
                     circulating = response['circulating_supply']
                     output = 'Currently, there are ' + \
-                             str(circulating) + ' ' + coin + '.'
+                             formatNumber(circulating) + ' ' + coin + '.'
                     total = response['total_supply']
 
                     # Additional information if the crypto has finite supply
                     if total is not None:
                         percentage = (circulating/total)*100
                         output = output + ' The supply stops at ' + \
-                            str(total) + ' ' + coin + '.'
-                        output = output + ' That means ' + str(percentage) + \
-                            '% of ' + coin + ' has been issued.'
+                            formatNumber(total) + ' ' + coin + '.'
+                        output = output + ' That means ' + \
+                            formatNumber(percentage) + '% of ' + coin + \
+                            ' has been issued.'
 
                 else:
                     output = arguments[1] + ' not found'
@@ -297,6 +297,24 @@ def main():
 
             # Update the offset
             current_offset = update_id + 1
+
+
+def formatNumber(number):
+
+    # Add thousands separator
+    commaSeparator = "{:,}".format(number)
+
+    # Replace commas with dots and vice versa
+    num = commaSeparator.replace('.', '|').replace(',', '.').replace('|', ',')
+
+    # Check it has at least 2 decimal places
+    divide = num.split(',')
+    if len(divide) == 1:
+        num = num + ',00'  # No decimals, add 2
+    if len(divide) == 2 and len(divide[1]) == 1:
+        num = num + '0'  # Only 1 decimal, add 1
+
+    return num
 
 
 if __name__ == '__main__':
