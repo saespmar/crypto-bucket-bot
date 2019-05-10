@@ -35,8 +35,31 @@ def main():
             # arguments[1] -> actual arguments
             arguments = received_text.lower().strip().split(" ", 1)
 
+            # ======================= BASIC COMMANDS ======================= #
+            if arguments[0] == '/help':
+                output = "You can control me by sending these commands\n\n" + \
+                    "!price [coin] - Current price of the cryptocurrency. " + \
+                    "For example: !price bitcoin\n\n" + \
+                    "!info [coin] - Basic information about the " + \
+                    "cryptocurrency. " + \
+                    "For example: !info bitcoin\n\n" + \
+                    "!price_change [interval] [coin] - Price change in " + \
+                    "percentage of the cryptocurrency within an interval. " + \
+                    "The interval must be 1h, 24h, 7d, 24d, 30d, 60d, " + \
+                    "200d or 1y. " + \
+                    "For example: !price_change 7d bitcoin\n\n" + \
+                    "!evolution [days] [currency] [coin] - Price " + \
+                    "evolution converted into a currency. The currency " + \
+                    "must be chf, inr, eur, cad, aud, gbp or usd. " + \
+                    "For example: !evolution 15 usd bitcoin\n\n" + \
+                    "!market_cap - Market capitalization of the " + \
+                    "cryptocurrency. " + \
+                    "For example: !market_cap bitcoin\n\n" + \
+                    "!supply - Current supply for the cryptocurrency. " + \
+                    "For example: !supply bitcoin"
+
             # ======================== SIMPLE PRICE ======================== #
-            if arguments[0] == '!price' and len(arguments) == 2:
+            elif arguments[0] == '!price' and len(arguments) == 2:
 
                 # Convert spaces in the name of the coin into hyphens
                 coin = arguments[1].strip().replace(' ', '-')
@@ -156,7 +179,7 @@ def main():
                     output = 'Invalid format'
 
             # ========================= MARKET CAP ========================= #
-            if arguments[0] == '!market_cap' and len(arguments) == 2:
+            elif arguments[0] == '!market_cap' and len(arguments) == 2:
 
                 # Convert spaces in the name of the coin into hyphens
                 coin = arguments[1].strip().replace(' ', '-')
@@ -180,7 +203,7 @@ def main():
                     output = arguments[1] + ' not found'
 
             # =========================== SUPPLY =========================== #
-            if arguments[0] == '!supply' and len(arguments) == 2:
+            elif arguments[0] == '!supply' and len(arguments) == 2:
 
                 # Convert spaces in the name of the coin into hyphens
                 coin = arguments[1].strip().replace(' ', '-')
@@ -204,7 +227,7 @@ def main():
                     output = arguments[1] + ' not found'
 
             # ========================= INFORMATION ======================== #
-            if arguments[0] == '!info' and len(arguments) == 2:
+            elif arguments[0] == '!info' and len(arguments) == 2:
 
                 # Convert spaces in the name of the coin into hyphens
                 coin = arguments[1].strip().replace(' ', '-')
