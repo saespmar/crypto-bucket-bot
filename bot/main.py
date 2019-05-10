@@ -36,7 +36,13 @@ def main():
             arguments = received_text.lower().strip().split(" ", 1)
 
             # ======================= BASIC COMMANDS ======================= #
-            if arguments[0] == '/help':
+            if arguments[0] == '/start':
+                output = "Hey " + message['message']['chat']['first_name'] + \
+                    "! I'm here to help you manage cryptocurrency " + \
+                    "information. Use /help to find out more about how to " + \
+                    "interact with me"
+
+            elif arguments[0] == '/help':
                 output = "You can control me by sending these commands\n\n" + \
                     "!price [coin] - Current price of the cryptocurrency. " + \
                     "For example: !price bitcoin\n\n" + \
