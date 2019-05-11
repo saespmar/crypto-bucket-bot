@@ -47,28 +47,32 @@ def main():
                     "! I'm here to help you manage cryptocurrency " + \
                     "information. Use /help to find out more about how to " + \
                     "interact with me"
+                bot.send_message(chat_id, output)
 
             elif arguments[0] == '/help':
                 output = "You can control me by sending these commands\n\n" + \
-                    "!price [coin] - Current price of the cryptocurrency. " + \
-                    "For example: !price bitcoin\n\n" + \
-                    "!info [coin] - Basic information about the " + \
+                    "*!price [coin]* - Current price of the " + \
                     "cryptocurrency. " + \
-                    "For example: !info bitcoin\n\n" + \
-                    "!price_change [interval] [coin] - Price change in " + \
+                    "For example: `!price bitcoin`\n\n" + \
+                    "*!info [coin]* - Basic information about the " + \
+                    "cryptocurrency. " + \
+                    "For example: `!info bitcoin`\n\n" + \
+                    "*!price_change [interval] [coin]* - Price change in " + \
                     "percentage of the cryptocurrency within an interval. " + \
                     "The interval must be 1h, 24h, 7d, 24d, 30d, 60d, " + \
                     "200d or 1y. " + \
-                    "For example: !price_change 7d bitcoin\n\n" + \
-                    "!evolution [days] [currency] [coin] - Price " + \
+                    "For example: `!price_change 7d bitcoin`\n\n" + \
+                    "*!evolution [days] [currency] [coin]* - Price " + \
                     "evolution converted into a currency. The currency " + \
                     "must be chf, inr, eur, cad, aud, gbp or usd. " + \
-                    "For example: !evolution 15 usd bitcoin\n\n" + \
-                    "!market_cap - Market capitalization of the " + \
+                    "For example: `!evolution 15 usd bitcoin`\n\n" + \
+                    "*!market_cap [coin]* - Market capitalization of the " + \
                     "cryptocurrency. " + \
-                    "For example: !market_cap bitcoin\n\n" + \
-                    "!supply - Current supply for the cryptocurrency. " + \
-                    "For example: !supply bitcoin"
+                    "For example: `!market_cap bitcoin`\n\n" + \
+                    "*!supply [coin]* - Current supply for the " + \
+                    "cryptocurrency. " + \
+                    "For example: `!supply bitcoin`"
+                bot.send_markdown_message(chat_id, output)
 
             # ======================== SIMPLE PRICE ======================== #
             elif arguments[0] == '!price' and len(arguments) == 2:
@@ -78,7 +82,7 @@ def main():
                 response = coinGecko.simple_price(coin)
 
                 if len(response) > 0:
-                    output = 'The current ' + coin + ' price is:\n'
+                    output = 'The current *' + coin + '* price is:\n'
 
                     # Build the response
                     for currency in response:
@@ -87,9 +91,10 @@ def main():
                             formatNumber(response[currency]) + ' ' + \
                             sign_map[currency] + \
                             '\n'
-
                 else:
-                    output = arguments[1] + ' not found'
+                    output = '*' + arguments[1] + '* not found'
+
+                bot.send_markdown_message(chat_id, output)
 
             # ======================== MARKET CHART ======================== #
             elif arguments[0] == '!evolution' and len(arguments) == 2:
@@ -116,8 +121,9 @@ def main():
                         response = response[0::cut_point]
 
                         # Build the response
-                        output = 'Evolution of ' + evolution_args[2].strip() +\
-                                 ' in the last ' + days + ' day(s)' +\
+                        output = 'Evolution of *' + \
+                                 evolution_args[2].strip() + \
+                                 '* in the last ' + days + ' day(s)' +\
                                  ' ' + emoji_map[currency] + '\n\n'
                         for index, price in enumerate(response):
 
@@ -140,15 +146,18 @@ def main():
 
                             # Get all together
                             output = output + \
-                                str(date) + '\n' + \
+                                '_' + str(date) + '_\n' + \
                                 tendency + ' ' + \
                                 formatNumber(price[1]) + ' ' + \
                                 sign_map[currency] + '\n\n'
 
+                        bot.send_markdown_message(chat_id, output)
                     else:
                         output = 'Invalid format'
+                        bot.send_message(chat_id, output)
                 else:
                     output = 'Invalid format'
+                    bot.send_message(chat_id, output)
 
             # ======================== PRICE CHANGE ======================== #
             elif arguments[0] == '!price_change' and len(arguments) == 2:
@@ -168,8 +177,8 @@ def main():
                             data = response['price_change_percentage_' +
                                             interval +
                                             '_in_currency']
-                            output = 'Price change of ' + coin + \
-                                     ' in the last ' + interval + ':\n'
+                            output = 'Price change of *' + coin + \
+                                     '* in the last _' + interval + '_:\n'
 
                             # Build the response
                             for currency in data:
@@ -183,12 +192,16 @@ def main():
                                         sign_map[currency] + \
                                         '\n'
                         else:
-                            output = coin + ' not found'
+                            output = '*' + coin + '* not found'
                     else:
                         output = 'Interval must be ' + \
-                                  '1h, 24h, 7d, 24d, 30d, 60d, 200d or 1y'
+                                 '`1h`, `24h`, `7d`, `24d`, `30d`, `60d`,' + \
+                                 ' `200d` or `1y`'
+
+                    bot.send_markdown_message(chat_id, output)
                 else:
                     output = 'Invalid format'
+                    bot.send_message(chat_id, output)
 
             # ========================= MARKET CAP ========================= #
             elif arguments[0] == '!market_cap' and len(arguments) == 2:
@@ -199,7 +212,7 @@ def main():
 
                 if len(response) > 0:
                     data = response['market_cap']
-                    output = 'The current ' + coin + ' market cap is:\n'
+                    output = 'The current *' + coin + '* market cap is:\n'
 
                     # Build the response
                     for currency in data:
@@ -209,9 +222,10 @@ def main():
                                 formatNumber(data[currency]) + ' ' + \
                                 sign_map[currency] + \
                                 '\n'
-
                 else:
                     output = arguments[1] + ' not found'
+
+                bot.send_markdown_message(chat_id, output)
 
             # =========================== SUPPLY =========================== #
             elif arguments[0] == '!supply' and len(arguments) == 2:
@@ -223,20 +237,21 @@ def main():
                 if len(response) > 0:
                     circulating = response['circulating_supply']
                     output = 'Currently, there are ' + \
-                             formatNumber(circulating) + ' ' + coin + '.'
+                             formatNumber(circulating) + ' *' + coin + '*.'
                     total = response['total_supply']
 
                     # Additional information if the crypto has finite supply
                     if total is not None:
                         percentage = (circulating/total)*100
                         output = output + ' The supply stops at ' + \
-                            formatNumber(total) + ' ' + coin + '.'
+                            formatNumber(total) + ' *' + coin + '*.'
                         output = output + ' That means ' + \
-                            formatNumber(percentage) + '% of ' + coin + \
-                            ' has been issued.'
-
+                            formatNumber(percentage) + '% of *' + coin + \
+                            '* has been issued.'
                 else:
-                    output = arguments[1] + ' not found'
+                    output = '*' + arguments[1] + '* not found'
+
+                bot.send_markdown_message(chat_id, output)
 
             # ========================= INFORMATION ======================== #
             elif arguments[0] == '!info' and len(arguments) == 2:
@@ -246,8 +261,8 @@ def main():
                 response = coinGecko.coin_info(coin)
 
                 if len(response) > 0:
-                    output = response['name'] + \
-                        ' (' + response['symbol'] + ')\n\n'
+                    output = '*' + response['name'] + \
+                        ' (' + response['symbol'] + ')*\n\n'
 
                     links = response['links']
                     twitter_url = links['twitter_screen_name']
@@ -285,15 +300,13 @@ def main():
                     output = output + \
                         '- Block time: ' + \
                         str(response['block_time_in_minutes']) + ' minutes\n'
-
                 else:
-                    output = arguments[1] + ' not found'
+                    output = '*' + arguments[1] + '* not found'
 
+                bot.send_markdown_message(chat_id, output)
             else:
                 output = 'Invalid format'
-
-            # Reply
-            bot.send_message(chat_id, output)
+                bot.send_message(chat_id, output)
 
             # Update the offset
             current_offset = update_id + 1
