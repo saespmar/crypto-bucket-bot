@@ -15,3 +15,7 @@ class TelegramRequester:
     def send_message(self, chat_id, text):
         params = {'chat_id': chat_id, 'text': text}
         return requests.post(self.url + 'sendMessage', params)
+
+    def send_markdown_message(self, chat_id, text):
+        params = {'chat_id': chat_id, 'text': text, 'parse_mode': 'Markdown'}
+        return requests.post(self.url + 'sendMessage', params)
