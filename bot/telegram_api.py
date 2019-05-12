@@ -19,3 +19,9 @@ class TelegramRequester:
     def send_markdown_message(self, chat_id, text):
         params = {'chat_id': chat_id, 'text': text, 'parse_mode': 'Markdown'}
         return requests.post(self.url + 'sendMessage', params)
+
+    def send_photo(self, chat_id, photo):
+        image = {'photo': photo}
+        params = {'chat_id': chat_id}
+        return requests.post(self.url + 'sendPhoto',
+                             params, files=image)
