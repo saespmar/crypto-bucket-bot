@@ -3,6 +3,7 @@ import time
 import config
 import telegram_api
 import coingecko_api
+import matplotlib.pyplot as plt
 
 
 def main():
@@ -159,6 +160,59 @@ def main():
                     output = 'Invalid format'
                     bot.send_message(chat_id, output)
 
+            # ================== MARKET CHART WITH IMAGE =================== #
+            elif arguments[0] == '!evolution_img' and len(arguments) == 2:
+
+                # evolution_args[0] -> days
+                # evolution_args[1] -> currency
+                # evolution_args[2] -> coin
+                evolution_args = arguments[1].strip().split(" ", 2)
+
+                if len(evolution_args) == 3:
+                    days = evolution_args[0]
+                    currency = evolution_args[1]
+                    coin = evolution_args[2].strip().replace(' ', '-')
+
+                    if currency in sign_map:
+                        response = coinGecko.market_chart(coin, currency, days)
+                    else:
+                        response = []
+
+                    if len(response) > 0:
+                        x = []
+                        y = []
+
+                        for point in response:
+
+                            # Convert the time deleting milliseconds
+                            timestamp = str(point[0])[0: 10]
+                            date = datetime.datetime \
+                                .fromtimestamp(float(timestamp))
+
+                            # Add values to x-axis and y-axis
+                            x.append(date)
+                            y.append(point[1])
+
+                        plt.plot(x, y)
+                        title = 'Evolution of ' + \
+                                evolution_args[2].strip() + \
+                                ' in the last ' + days + ' day(s)'
+                        plt.title(title)
+                        plt.ylabel(currency)  # y-axis showing currency
+                        plt.xticks(rotation=90)  # Fit long values in x-axis
+                        plt.tight_layout()  # Give enough room to the graph
+                        plt.savefig('graph.png')  # Save file to send
+                        photo = open('graph.png', 'rb')  # Open file saved
+                        bot.send_photo(chat_id, photo)
+                        photo.close()  # Free resources
+                        plt.clf()  # Clear graph
+                    else:
+                        output = 'Invalid format'
+                        bot.send_message(chat_id, output)
+                else:
+                    output = 'Invalid format'
+                    bot.send_message(chat_id, output)
+
             # ======================== PRICE CHANGE ======================== #
             elif arguments[0] == '!price_change' and len(arguments) == 2:
 
@@ -304,6 +358,7 @@ def main():
                     output = '*' + arguments[1] + '* not found'
 
                 bot.send_markdown_message(chat_id, output)
+
             else:
                 output = 'Invalid format'
                 bot.send_message(chat_id, output)
