@@ -15,10 +15,11 @@ First of all, you need a Telegram account. You can create one downloading their 
 
 Once your account is ready, start a chat with [@BotFather](https://t.me/botfather) and follow the instructions until you get a token to access the HTTP API. This token should be placed in `bot/config.py` and should be stored in a *bot_token* variable. [Here](bot/config.py.example) is an example.
 
-Also, Python 3 with the pip package manager needs to be installed on your computer. Then, run this command in order to get the *requests* package:
+Also, Python 3 with the pip package manager needs to be installed on your computer. Then, run these commands in order to get the *requests* and the *matplotlib* packages:
 
 ```
 pip install requests
+pip install matplotlib
 ```
 
 ### Running
