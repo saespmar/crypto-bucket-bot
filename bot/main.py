@@ -67,6 +67,11 @@ def main():
                     "evolution converted into a currency. The currency " + \
                     "must be chf, inr, eur, cad, aud, gbp or usd. " + \
                     "For example: `!evolution 15 usd bitcoin`\n\n" + \
+                    "*!evolution_img [days] [currency] [coin]* - Image " + \
+                    "showing the evolution converted into a currency. The " + \
+                    "currency must be chf, inr, eur, cad, aud, gbp " + \
+                    "or usd. " + \
+                    "For example: `!evolution_img 365 usd bitcoin`\n\n" + \
                     "*!market_cap [coin]* - Market capitalization of the " + \
                     "cryptocurrency. " + \
                     "For example: `!market_cap bitcoin`\n\n" + \
