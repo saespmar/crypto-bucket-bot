@@ -85,7 +85,16 @@ def main():
 
                 # Convert spaces in the name of the coin into hyphens
                 coin = arguments[1].strip().replace(' ', '-')
-                response = coinGecko.simple_price(coin)
+
+                try:
+                    response = coinGecko.simple_price(coin)
+                except:
+                    output = 'The service is unavailable, try again later'
+                    bot.send_message(chat_id, output)
+
+                    # Update the offset
+                    current_offset = update_id + 1
+                    continue
 
                 if len(response) > 0:
                     output = 'The current *' + coin + '* price is:\n'
@@ -116,7 +125,18 @@ def main():
                     coin = evolution_args[2].strip().replace(' ', '-')
 
                     if currency in sign_map:
-                        response = coinGecko.market_chart(coin, currency, days)
+
+                        try:
+                            response = coinGecko.market_chart(coin, currency,
+                                                              days)
+                        except:
+                            output = 'The service is unavailable, ' + \
+                                'try again later'
+                            bot.send_message(chat_id, output)
+
+                            # Update the offset
+                            current_offset = update_id + 1
+                            continue
                     else:
                         response = []
 
@@ -179,7 +199,18 @@ def main():
                     coin = evolution_args[2].strip().replace(' ', '-')
 
                     if currency in sign_map:
-                        response = coinGecko.market_chart(coin, currency, days)
+
+                        try:
+                            response = coinGecko.market_chart(coin, currency,
+                                                              days)
+                        except:
+                            output = 'The service is unavailable, ' + \
+                                'try again later'
+                            bot.send_message(chat_id, output)
+
+                            # Update the offset
+                            current_offset = update_id + 1
+                            continue
                     else:
                         response = []
 
@@ -231,7 +262,18 @@ def main():
                                         '30d', '60d', '200d', '1y'}
                     coin = price_change[1].strip().replace(' ', '-')
                     if interval in allowed_interval:
-                        response = coinGecko.market_data(coin)
+
+                        try:
+                            response = coinGecko.market_data(coin)
+                        except:
+                            output = 'The service is unavailable, ' + \
+                                'try again later'
+                            bot.send_message(chat_id, output)
+
+                            # Update the offset
+                            current_offset = update_id + 1
+                            continue
+
                         if len(response) > 0:
                             data = response['price_change_percentage_' +
                                             interval +
@@ -267,7 +309,16 @@ def main():
 
                 # Convert spaces in the name of the coin into hyphens
                 coin = arguments[1].strip().replace(' ', '-')
-                response = coinGecko.market_data(coin)
+
+                try:
+                    response = coinGecko.market_data(coin)
+                except:
+                    output = 'The service is unavailable, try again later'
+                    bot.send_message(chat_id, output)
+
+                    # Update the offset
+                    current_offset = update_id + 1
+                    continue
 
                 if len(response) > 0:
                     data = response['market_cap']
@@ -291,7 +342,16 @@ def main():
 
                 # Convert spaces in the name of the coin into hyphens
                 coin = arguments[1].strip().replace(' ', '-')
-                response = coinGecko.market_data(coin)
+
+                try:
+                    response = coinGecko.market_data(coin)
+                except:
+                    output = 'The service is unavailable, try again later'
+                    bot.send_message(chat_id, output)
+
+                    # Update the offset
+                    current_offset = update_id + 1
+                    continue
 
                 if len(response) > 0:
                     circulating = response['circulating_supply']
@@ -317,7 +377,16 @@ def main():
 
                 # Convert spaces in the name of the coin into hyphens
                 coin = arguments[1].strip().replace(' ', '-')
-                response = coinGecko.coin_info(coin)
+
+                try:
+                    response = coinGecko.coin_info(coin)
+                except:
+                    output = 'The service is unavailable, try again later'
+                    bot.send_message(chat_id, output)
+
+                    # Update the offset
+                    current_offset = update_id + 1
+                    continue
 
                 if len(response) > 0:
                     output = '*' + response['name'] + \
