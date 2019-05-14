@@ -4,12 +4,24 @@ import config
 import telegram_api
 import coingecko_api
 import matplotlib.pyplot as plt
+import logging
 
 
 def main():
     bot = telegram_api.TelegramRequester(config.bot_token)
     current_offset = None  # Identifier of the first update to be returned
     coinGecko = coingecko_api.CoinGeckoRequester()
+
+    # DEBUG: Bot interactions (send, receive messages) and connections
+    # INFO: Bot starts/stops and configuration changes
+    # WARNING: Connection error
+    logLevel = logging.INFO
+    logging.basicConfig(
+        filename='bot.log',
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        level=logLevel
+    )
+    logging.info('Bot starts')
 
     # Equivalence between currencies and emojis
     emoji_map = {'chf': '🇨🇭', 'inr': '🇮🇳', 'eur': '🇪🇺', 'cad': '🇨🇦',
@@ -27,6 +39,9 @@ def main():
 
             # If the user edits a previous message, ignore it
             if 'message' not in message:
+                chat_id = message['edited_message']['chat']['id']
+                logging.debug('Ignored edited message ' +
+                              '[Chat: ' + str(chat_id) + ']')
                 current_offset = update_id + 1
                 continue
 
@@ -36,7 +51,10 @@ def main():
             if 'text' in message['message']:
                 received_text = message['message']['text']
             else:
-                received_text = ''
+                logging.debug('Ignored non-text message ' +
+                              '[Chat: ' + str(chat_id) + ']')
+                current_offset = update_id + 1
+                continue
 
             # arguments[0] -> command
             # arguments[1] -> actual arguments
@@ -49,6 +67,8 @@ def main():
                     "information. Use /help to find out more about how to " + \
                     "interact with me"
                 bot.send_message(chat_id, output)
+                logging.debug('OK /start ' +
+                              '[Chat: ' + str(chat_id) + ']')
 
             elif arguments[0] == '/help':
                 output = "You can control me by sending these commands\n\n" + \
@@ -79,6 +99,8 @@ def main():
                     "cryptocurrency. " + \
                     "For example: `!supply bitcoin`"
                 bot.send_markdown_message(chat_id, output)
+                logging.debug('OK /help ' +
+                              '[Chat: ' + str(chat_id) + ']')
 
             # ======================== SIMPLE PRICE ======================== #
             elif arguments[0] == '!price' and len(arguments) == 2:
@@ -89,6 +111,7 @@ def main():
                 try:
                     response = coinGecko.simple_price(coin)
                 except:
+                    logging.warning('CoinGecko API failed [Simple price]')
                     output = 'The service is unavailable, try again later'
                     bot.send_message(chat_id, output)
 
@@ -106,8 +129,12 @@ def main():
                             formatNumber(response[currency]) + ' ' + \
                             sign_map[currency] + \
                             '\n'
+                    logging.debug('OK !price ' +
+                                  '[Chat: ' + str(chat_id) + ']')
                 else:
                     output = '*' + arguments[1] + '* not found'
+                    logging.debug('BAD !price ' +
+                                  '[Chat: ' + str(chat_id) + ']')
 
                 bot.send_markdown_message(chat_id, output)
 
@@ -130,6 +157,8 @@ def main():
                             response = coinGecko.market_chart(coin, currency,
                                                               days)
                         except:
+                            logging.warning('CoinGecko API failed ' +
+                                            '[Market chart]')
                             output = 'The service is unavailable, ' + \
                                 'try again later'
                             bot.send_message(chat_id, output)
@@ -178,12 +207,18 @@ def main():
                                 sign_map[currency] + '\n\n'
 
                         bot.send_markdown_message(chat_id, output)
+                        logging.debug('OK !evolution ' +
+                                      '[Chat: ' + str(chat_id) + ']')
                     else:
                         output = 'Invalid format'
                         bot.send_message(chat_id, output)
+                        logging.debug('BAD !evolution ' +
+                                      '[Chat: ' + str(chat_id) + ']')
                 else:
                     output = 'Invalid format'
                     bot.send_message(chat_id, output)
+                    logging.debug('BAD !evolution ' +
+                                  '[Chat: ' + str(chat_id) + ']')
 
             # ================== MARKET CHART WITH IMAGE =================== #
             elif arguments[0] == '!evolution_img' and len(arguments) == 2:
@@ -204,6 +239,8 @@ def main():
                             response = coinGecko.market_chart(coin, currency,
                                                               days)
                         except:
+                            logging.warning('CoinGecko API failed ' +
+                                            '[Market chart]')
                             output = 'The service is unavailable, ' + \
                                 'try again later'
                             bot.send_message(chat_id, output)
@@ -240,14 +277,20 @@ def main():
                         plt.savefig('graph.png')  # Save file to send
                         photo = open('graph.png', 'rb')  # Open file saved
                         bot.send_photo(chat_id, photo)
+                        logging.debug('OK !evolution_img ' +
+                                      '[Chat: ' + str(chat_id) + ']')
                         photo.close()  # Free resources
                         plt.clf()  # Clear graph
                     else:
                         output = 'Invalid format'
                         bot.send_message(chat_id, output)
+                        logging.debug('BAD !evolution_img ' +
+                                      '[Chat: ' + str(chat_id) + ']')
                 else:
                     output = 'Invalid format'
                     bot.send_message(chat_id, output)
+                    logging.debug('BAD !evolution_img ' +
+                                  '[Chat: ' + str(chat_id) + ']')
 
             # ======================== PRICE CHANGE ======================== #
             elif arguments[0] == '!price_change' and len(arguments) == 2:
@@ -266,6 +309,8 @@ def main():
                         try:
                             response = coinGecko.market_data(coin)
                         except:
+                            logging.warning('CoinGecko API failed ' +
+                                            '[Market data]')
                             output = 'The service is unavailable, ' + \
                                 'try again later'
                             bot.send_message(chat_id, output)
@@ -292,17 +337,25 @@ def main():
                                         value + ' ' + \
                                         sign_map[currency] + \
                                         '\n'
+                            logging.debug('OK !price_change ' +
+                                          '[Chat: ' + str(chat_id) + ']')
                         else:
                             output = '*' + coin + '* not found'
+                            logging.debug('BAD !price_change ' +
+                                          '[Chat: ' + str(chat_id) + ']')
                     else:
                         output = 'Interval must be ' + \
                                  '`1h`, `24h`, `7d`, `24d`, `30d`, `60d`,' + \
                                  ' `200d` or `1y`'
+                        logging.debug('BAD !price_change ' +
+                                      '[Chat: ' + str(chat_id) + ']')
 
                     bot.send_markdown_message(chat_id, output)
                 else:
                     output = 'Invalid format'
                     bot.send_message(chat_id, output)
+                    logging.debug('BAD !price_change ' +
+                                  '[Chat: ' + str(chat_id) + ']')
 
             # ========================= MARKET CAP ========================= #
             elif arguments[0] == '!market_cap' and len(arguments) == 2:
@@ -313,6 +366,8 @@ def main():
                 try:
                     response = coinGecko.market_data(coin)
                 except:
+                    logging.warning('CoinGecko API failed ' +
+                                    '[Market data]')
                     output = 'The service is unavailable, try again later'
                     bot.send_message(chat_id, output)
 
@@ -332,8 +387,12 @@ def main():
                                 formatNumber(data[currency]) + ' ' + \
                                 sign_map[currency] + \
                                 '\n'
+                    logging.debug('OK !market_cap ' +
+                                  '[Chat: ' + str(chat_id) + ']')
                 else:
                     output = arguments[1] + ' not found'
+                    logging.debug('BAD !market_cap ' +
+                                  '[Chat: ' + str(chat_id) + ']')
 
                 bot.send_markdown_message(chat_id, output)
 
@@ -346,6 +405,8 @@ def main():
                 try:
                     response = coinGecko.market_data(coin)
                 except:
+                    logging.warning('CoinGecko API failed ' +
+                                    '[Market data]')
                     output = 'The service is unavailable, try again later'
                     bot.send_message(chat_id, output)
 
@@ -367,8 +428,12 @@ def main():
                         output = output + ' That means ' + \
                             formatNumber(percentage) + '% of *' + coin + \
                             '* has been issued.'
+                    logging.debug('OK !supply ' +
+                                  '[Chat: ' + str(chat_id) + ']')
                 else:
                     output = '*' + arguments[1] + '* not found'
+                    logging.debug('BAD !supply ' +
+                                  '[Chat: ' + str(chat_id) + ']')
 
                 bot.send_markdown_message(chat_id, output)
 
@@ -381,6 +446,7 @@ def main():
                 try:
                     response = coinGecko.coin_info(coin)
                 except:
+                    logging.warning('CoinGecko API failed [Coin info]')
                     output = 'The service is unavailable, try again later'
                     bot.send_message(chat_id, output)
 
@@ -428,12 +494,19 @@ def main():
                     output = output + \
                         '- Block time: ' + \
                         str(response['block_time_in_minutes']) + ' minutes\n'
+
+                    logging.debug('OK !info ' +
+                                  '[Chat: ' + str(chat_id) + ']')
                 else:
                     output = '*' + arguments[1] + '* not found'
+                    logging.debug('BAD !info ' +
+                                  '[Chat: ' + str(chat_id) + ']')
 
                 bot.send_markdown_message(chat_id, output)
 
             else:
+                logging.debug('Unknown command ' +
+                              '[Chat: ' + str(chat_id) + ']')
                 output = 'Invalid format'
                 bot.send_message(chat_id, output)
 
@@ -463,4 +536,5 @@ if __name__ == '__main__':
     try:
         main()
     except KeyboardInterrupt:
+        logging.info('Bot manually disconnected')
         exit()
