@@ -78,19 +78,25 @@ def main():
                     "*!info [coin]* - Basic information about the " + \
                     "cryptocurrency. " + \
                     "For example: `!info bitcoin`\n\n" + \
-                    "*!price_change [interval] [coin]* - Price change in " + \
+                    "*!price_change [interval] [coin]* - Price change " + \
                     "percentage of the cryptocurrency within an interval. " + \
                     "The interval must be 1h, 24h, 7d, 24d, 30d, 60d, " + \
                     "200d or 1y. " + \
                     "For example: `!price_change 7d bitcoin`\n\n" + \
                     "*!evolution [days] [currency] [coin]* - Price " + \
-                    "evolution converted into a currency. The currency " + \
-                    "must be chf, inr, eur, cad, aud, gbp or usd. " + \
-                    "For example: `!evolution 15 usd bitcoin`\n\n" + \
-                    "*!evolution_img [days] [currency] [coin]* - Image " + \
-                    "showing the evolution converted into a currency. The " + \
-                    "currency must be chf, inr, eur, cad, aud, gbp " + \
+                    "evolution of a coin converted into a currency. " + \
+                    "The currency must be chf, inr, eur, cad, aud, gbp " + \
                     "or usd. " + \
+                    "For example: `!evolution 15 usd bitcoin`\n\n" + \
+                    "*!top_coins [currency]* - Image showing the price " + \
+                    "change of the top 10 cryptocurrencies in the last 24 " + \
+                    "hours. The currency must be chf, inr, eur, cad, aud, " + \
+                    "gbp or usd. " + \
+                    "For example: `!top_coins usd`\n\n" + \
+                    "*!evolution_img [days] [currency] [coin]* - Image " + \
+                    "showing the price evolution of a coin converted into " + \
+                    "a currency. The currency must be chf, inr, eur, cad, " + \
+                    "aud, gbp or usd. " + \
                     "For example: `!evolution_img 365 usd bitcoin`\n\n" + \
                     "*!market_cap [coin]* - Market capitalization of the " + \
                     "cryptocurrency. " + \
@@ -355,6 +361,56 @@ def main():
                     output = 'Invalid format'
                     bot.send_message(chat_id, output)
                     logging.debug('BAD !price_change ' +
+                                  '[Chat: ' + str(chat_id) + ']')
+
+            # ============= 24H TOP CRYPTOCURRENCIES WITH IMAGE ============ #
+            elif arguments[0] == '!top_coins' and len(arguments) == 2:
+                currency = arguments[1]
+
+                if currency in sign_map:
+                    try:
+                        response = coinGecko.coins_markets(currency, 10)
+                    except:
+                        logging.warning('CoinGecko API failed [Top coins]')
+                        output = 'The service is unavailable, try again later'
+                        bot.send_message(chat_id, output)
+
+                        # Update the offset
+                        current_offset = update_id + 1
+                        continue
+
+                    x = []
+                    y = []
+                    colors = []
+
+                    for crypto in response:
+                        x.append(crypto['name'])
+                        change = crypto['price_change_percentage_24h']
+                        y.append(change)
+                        if change < 0:
+                            colors.append('r')  # Red color
+                        else:
+                            colors.append('g')  # Green color
+
+                    plt.bar(x, y, color=colors)
+                    plt.title(
+                        '24 hours price change of the top 10 cryptocurrencies'
+                    )
+                    plt.ylabel('% in ' + currency)
+                    plt.xticks(rotation=90)  # Fit long names in x-axis
+                    plt.tight_layout()  # Give enough room to the graph
+                    plt.savefig('graph.png')  # Save file to send
+                    photo = open('graph.png', 'rb')  # Open file saved
+                    bot.send_photo(chat_id, photo)
+                    logging.debug('OK !top_coins ' +
+                                  '[Chat: ' + str(chat_id) + ']')
+                    photo.close()  # Free resources
+                    plt.clf()  # Clear graph
+                else:
+                    output = "The currency must be chf, inr, eur, cad, " + \
+                        "aud, gbp or usd"
+                    bot.send_message(chat_id, output)
+                    logging.debug('BAD !top_coins ' +
                                   '[Chat: ' + str(chat_id) + ']')
 
             # ========================= MARKET CAP ========================= #
