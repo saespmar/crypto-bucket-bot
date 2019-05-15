@@ -52,3 +52,15 @@ class CoinGeckoRequester:
             return []
         else:
             return response_json
+
+    def coins_markets(self, coin, limit):
+        params = {'vs_currency': coin,
+                  'per_page': limit,
+                  'order': 'gecko_desc',
+                  'sparkline': False}
+        response = requests.get(self.url + 'coins/markets', params)
+        response_json = response.json()
+        if 'error' in response_json:
+            return []
+        else:
+            return response_json
