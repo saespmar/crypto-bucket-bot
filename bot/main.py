@@ -108,270 +108,19 @@ def main():
                 logging.debug('OK /help ' +
                               '[Chat: ' + str(chat_id) + ']')
 
-            # ======================== SIMPLE PRICE ======================== #
-            elif arguments[0] == '!price' and len(arguments) == 2:
+            # ===================== ADVANCED COMMANDS ====================== #
+            if len(arguments) == 2:
 
-                # Convert spaces in the name of the coin into hyphens
-                coin = arguments[1].strip().replace(' ', '-')
+                # ====================== SIMPLE PRICE ====================== #
+                if arguments[0] == '!price':
 
-                try:
-                    response = coinGecko.simple_price(coin)
-                except:
-                    logging.warning('CoinGecko API failed [Simple price]')
-                    output = 'The service is unavailable, try again later'
-                    bot.send_message(chat_id, output)
+                    # Convert spaces in the name of the coin into hyphens
+                    coin = arguments[1].strip().replace(' ', '-')
 
-                    # Update the offset
-                    current_offset = update_id + 1
-                    continue
-
-                if len(response) > 0:
-                    output = 'The current *' + coin + '* price is:\n'
-
-                    # Build the response
-                    for currency in response:
-                        output = output + \
-                            emoji_map[currency] + ' ' + \
-                            formatNumber(response[currency]) + ' ' + \
-                            sign_map[currency] + \
-                            '\n'
-                    logging.debug('OK !price ' +
-                                  '[Chat: ' + str(chat_id) + ']')
-                else:
-                    output = '*' + arguments[1] + '* not found'
-                    logging.debug('BAD !price ' +
-                                  '[Chat: ' + str(chat_id) + ']')
-
-                bot.send_markdown_message(chat_id, output)
-
-            # ======================== MARKET CHART ======================== #
-            elif arguments[0] == '!evolution' and len(arguments) == 2:
-
-                # evolution_args[0] -> days
-                # evolution_args[1] -> currency
-                # evolution_args[2] -> coin
-                evolution_args = arguments[1].strip().split(" ", 2)
-
-                if len(evolution_args) == 3:
-                    days = evolution_args[0]
-                    currency = evolution_args[1]
-                    coin = evolution_args[2].strip().replace(' ', '-')
-
-                    if currency in sign_map:
-
-                        try:
-                            response = coinGecko.market_chart(coin, currency,
-                                                              days)
-                        except:
-                            logging.warning('CoinGecko API failed ' +
-                                            '[Market chart]')
-                            output = 'The service is unavailable, ' + \
-                                'try again later'
-                            bot.send_message(chat_id, output)
-
-                            # Update the offset
-                            current_offset = update_id + 1
-                            continue
-                    else:
-                        response = []
-
-                    if len(response) > 0:
-
-                        # Return only 12 values
-                        cut_point = int(len(response)/11)
-                        response = response[0::cut_point]
-
-                        # Build the response
-                        output = 'Evolution of *' + \
-                                 evolution_args[2].strip() + \
-                                 '* in the last ' + days + ' day(s)' +\
-                                 ' ' + emoji_map[currency] + '\n\n'
-                        for index, price in enumerate(response):
-
-                            # Convert the time deleting milliseconds
-                            timestamp = str(price[0])[0: 10]
-                            date = datetime.datetime \
-                                .fromtimestamp(float(timestamp)) \
-                                .strftime('%d/%m/%Y -- %H:%M')
-
-                            # Check if the price has increased or not
-                            if index > 0:
-                                if response[index-1][1] > response[index][1]:
-                                    tendency = '⬇️'
-                                elif response[index-1][1] < response[index][1]:
-                                    tendency = '⬆️'
-                                else:
-                                    tendency = '➡️'
-                            else:
-                                tendency = '⏹️'
-
-                            # Get all together
-                            output = output + \
-                                '_' + str(date) + '_\n' + \
-                                tendency + ' ' + \
-                                formatNumber(price[1]) + ' ' + \
-                                sign_map[currency] + '\n\n'
-
-                        bot.send_markdown_message(chat_id, output)
-                        logging.debug('OK !evolution ' +
-                                      '[Chat: ' + str(chat_id) + ']')
-                    else:
-                        output = 'Invalid format'
-                        bot.send_message(chat_id, output)
-                        logging.debug('BAD !evolution ' +
-                                      '[Chat: ' + str(chat_id) + ']')
-                else:
-                    output = 'Invalid format'
-                    bot.send_message(chat_id, output)
-                    logging.debug('BAD !evolution ' +
-                                  '[Chat: ' + str(chat_id) + ']')
-
-            # ================== MARKET CHART WITH IMAGE =================== #
-            elif arguments[0] == '!evolution_img' and len(arguments) == 2:
-
-                # evolution_args[0] -> days
-                # evolution_args[1] -> currency
-                # evolution_args[2] -> coin
-                evolution_args = arguments[1].strip().split(" ", 2)
-
-                if len(evolution_args) == 3:
-                    days = evolution_args[0]
-                    currency = evolution_args[1]
-                    coin = evolution_args[2].strip().replace(' ', '-')
-
-                    if currency in sign_map:
-
-                        try:
-                            response = coinGecko.market_chart(coin, currency,
-                                                              days)
-                        except:
-                            logging.warning('CoinGecko API failed ' +
-                                            '[Market chart]')
-                            output = 'The service is unavailable, ' + \
-                                'try again later'
-                            bot.send_message(chat_id, output)
-
-                            # Update the offset
-                            current_offset = update_id + 1
-                            continue
-                    else:
-                        response = []
-
-                    if len(response) > 0:
-                        x = []
-                        y = []
-
-                        for point in response:
-
-                            # Convert the time deleting milliseconds
-                            timestamp = str(point[0])[0: 10]
-                            date = datetime.datetime \
-                                .fromtimestamp(float(timestamp))
-
-                            # Add values to x-axis and y-axis
-                            x.append(date)
-                            y.append(point[1])
-
-                        plt.plot(x, y)
-                        title = 'Evolution of ' + \
-                                evolution_args[2].strip() + \
-                                ' in the last ' + days + ' day(s)'
-                        plt.title(title)
-                        plt.ylabel(currency)  # y-axis showing currency
-                        plt.xticks(rotation=90)  # Fit long values in x-axis
-                        plt.tight_layout()  # Give enough room to the graph
-                        plt.savefig('graph.png')  # Save file to send
-                        photo = open('graph.png', 'rb')  # Open file saved
-                        bot.send_photo(chat_id, photo)
-                        logging.debug('OK !evolution_img ' +
-                                      '[Chat: ' + str(chat_id) + ']')
-                        photo.close()  # Free resources
-                        plt.clf()  # Clear graph
-                    else:
-                        output = 'Invalid format'
-                        bot.send_message(chat_id, output)
-                        logging.debug('BAD !evolution_img ' +
-                                      '[Chat: ' + str(chat_id) + ']')
-                else:
-                    output = 'Invalid format'
-                    bot.send_message(chat_id, output)
-                    logging.debug('BAD !evolution_img ' +
-                                  '[Chat: ' + str(chat_id) + ']')
-
-            # ======================== PRICE CHANGE ======================== #
-            elif arguments[0] == '!price_change' and len(arguments) == 2:
-
-                # price_change[0] -> interval
-                # price_change[1] -> coin
-                price_change = arguments[1].strip().split(" ", 1)
-
-                if len(price_change) == 2:
-                    interval = price_change[0]
-                    allowed_interval = {'1h', '24h', '7d', '14d',
-                                        '30d', '60d', '200d', '1y'}
-                    coin = price_change[1].strip().replace(' ', '-')
-                    if interval in allowed_interval:
-
-                        try:
-                            response = coinGecko.market_data(coin)
-                        except:
-                            logging.warning('CoinGecko API failed ' +
-                                            '[Market data]')
-                            output = 'The service is unavailable, ' + \
-                                'try again later'
-                            bot.send_message(chat_id, output)
-
-                            # Update the offset
-                            current_offset = update_id + 1
-                            continue
-
-                        if len(response) > 0:
-                            data = response['price_change_percentage_' +
-                                            interval +
-                                            '_in_currency']
-                            output = 'Price change of *' + coin + \
-                                     '* in the last _' + interval + '_:\n'
-
-                            # Build the response
-                            for currency in data:
-                                if currency in sign_map:
-                                    value = formatNumber(data[currency]) + '%'
-                                    if data[currency] > 0:
-                                        value = '+' + value
-                                    output = output + \
-                                        emoji_map[currency] + ' ' + \
-                                        value + ' ' + \
-                                        sign_map[currency] + \
-                                        '\n'
-                            logging.debug('OK !price_change ' +
-                                          '[Chat: ' + str(chat_id) + ']')
-                        else:
-                            output = '*' + coin + '* not found'
-                            logging.debug('BAD !price_change ' +
-                                          '[Chat: ' + str(chat_id) + ']')
-                    else:
-                        output = 'Interval must be ' + \
-                                 '`1h`, `24h`, `7d`, `24d`, `30d`, `60d`,' + \
-                                 ' `200d` or `1y`'
-                        logging.debug('BAD !price_change ' +
-                                      '[Chat: ' + str(chat_id) + ']')
-
-                    bot.send_markdown_message(chat_id, output)
-                else:
-                    output = 'Invalid format'
-                    bot.send_message(chat_id, output)
-                    logging.debug('BAD !price_change ' +
-                                  '[Chat: ' + str(chat_id) + ']')
-
-            # ============= 24H TOP CRYPTOCURRENCIES WITH IMAGE ============ #
-            elif arguments[0] == '!top_coins' and len(arguments) == 2:
-                currency = arguments[1]
-
-                if currency in sign_map:
                     try:
-                        response = coinGecko.coins_markets(currency, 10)
+                        response = coinGecko.simple_price(coin)
                     except:
-                        logging.warning('CoinGecko API failed [Top coins]')
+                        logging.warning('CoinGecko API failed [Simple price]')
                         output = 'The service is unavailable, try again later'
                         bot.send_message(chat_id, output)
 
@@ -379,189 +128,455 @@ def main():
                         current_offset = update_id + 1
                         continue
 
-                    x = []
-                    y = []
-                    colors = []
+                    if len(response) > 0:
+                        output = 'The current *' + coin + '* price is:\n'
 
-                    for crypto in response:
-                        x.append(crypto['name'])
-                        change = crypto['price_change_percentage_24h']
-                        y.append(change)
-                        if change < 0:
-                            colors.append('r')  # Red color
-                        else:
-                            colors.append('g')  # Green color
-
-                    plt.bar(x, y, color=colors)
-                    plt.title(
-                        '24 hours price change of the top 10 cryptocurrencies'
-                    )
-                    plt.ylabel('% in ' + currency)
-                    plt.xticks(rotation=90)  # Fit long names in x-axis
-                    plt.tight_layout()  # Give enough room to the graph
-                    plt.savefig('graph.png')  # Save file to send
-                    photo = open('graph.png', 'rb')  # Open file saved
-                    bot.send_photo(chat_id, photo)
-                    logging.debug('OK !top_coins ' +
-                                  '[Chat: ' + str(chat_id) + ']')
-                    photo.close()  # Free resources
-                    plt.clf()  # Clear graph
-                else:
-                    output = "The currency must be chf, inr, eur, cad, " + \
-                        "aud, gbp or usd"
-                    bot.send_message(chat_id, output)
-                    logging.debug('BAD !top_coins ' +
-                                  '[Chat: ' + str(chat_id) + ']')
-
-            # ========================= MARKET CAP ========================= #
-            elif arguments[0] == '!market_cap' and len(arguments) == 2:
-
-                # Convert spaces in the name of the coin into hyphens
-                coin = arguments[1].strip().replace(' ', '-')
-
-                try:
-                    response = coinGecko.market_data(coin)
-                except:
-                    logging.warning('CoinGecko API failed ' +
-                                    '[Market data]')
-                    output = 'The service is unavailable, try again later'
-                    bot.send_message(chat_id, output)
-
-                    # Update the offset
-                    current_offset = update_id + 1
-                    continue
-
-                if len(response) > 0:
-                    data = response['market_cap']
-                    output = 'The current *' + coin + '* market cap is:\n'
-
-                    # Build the response
-                    for currency in data:
-                        if currency in sign_map:
+                        # Build the response
+                        for currency in response:
                             output = output + \
                                 emoji_map[currency] + ' ' + \
-                                formatNumber(data[currency]) + ' ' + \
+                                formatNumber(response[currency]) + ' ' + \
                                 sign_map[currency] + \
                                 '\n'
-                    logging.debug('OK !market_cap ' +
-                                  '[Chat: ' + str(chat_id) + ']')
-                else:
-                    output = arguments[1] + ' not found'
-                    logging.debug('BAD !market_cap ' +
-                                  '[Chat: ' + str(chat_id) + ']')
+                        logging.debug('OK !price ' +
+                                      '[Chat: ' + str(chat_id) + ']')
+                    else:
+                        output = '*' + arguments[1] + '* not found'
+                        logging.debug('BAD !price ' +
+                                      '[Chat: ' + str(chat_id) + ']')
 
-                bot.send_markdown_message(chat_id, output)
+                    bot.send_markdown_message(chat_id, output)
 
-            # =========================== SUPPLY =========================== #
-            elif arguments[0] == '!supply' and len(arguments) == 2:
+                # ====================== MARKET CHART ====================== #
+                elif arguments[0] == '!evolution':
 
-                # Convert spaces in the name of the coin into hyphens
-                coin = arguments[1].strip().replace(' ', '-')
+                    # evolution_args[0] -> days
+                    # evolution_args[1] -> currency
+                    # evolution_args[2] -> coin
+                    evolution_args = arguments[1].strip().split(" ", 2)
 
-                try:
-                    response = coinGecko.market_data(coin)
-                except:
-                    logging.warning('CoinGecko API failed ' +
-                                    '[Market data]')
-                    output = 'The service is unavailable, try again later'
-                    bot.send_message(chat_id, output)
+                    if len(evolution_args) == 3:
+                        days = evolution_args[0]
+                        currency = evolution_args[1]
+                        coin = evolution_args[2].strip().replace(' ', '-')
 
-                    # Update the offset
-                    current_offset = update_id + 1
-                    continue
+                        if currency in sign_map:
 
-                if len(response) > 0:
-                    circulating = response['circulating_supply']
-                    output = 'Currently, there are ' + \
-                             formatNumber(circulating) + ' *' + coin + '*.'
-                    total = response['total_supply']
+                            try:
+                                response = coinGecko.market_chart(
+                                    coin, currency, days
+                                )
+                            except:
+                                logging.warning('CoinGecko API failed ' +
+                                                '[Market chart]')
+                                output = 'The service is unavailable, ' + \
+                                    'try again later'
+                                bot.send_message(chat_id, output)
 
-                    # Additional information if the crypto has finite supply
-                    if total is not None:
-                        percentage = (circulating/total)*100
-                        output = output + ' The supply stops at ' + \
-                            formatNumber(total) + ' *' + coin + '*.'
-                        output = output + ' That means ' + \
-                            formatNumber(percentage) + '% of *' + coin + \
-                            '* has been issued.'
-                    logging.debug('OK !supply ' +
-                                  '[Chat: ' + str(chat_id) + ']')
-                else:
-                    output = '*' + arguments[1] + '* not found'
-                    logging.debug('BAD !supply ' +
-                                  '[Chat: ' + str(chat_id) + ']')
+                                # Update the offset
+                                current_offset = update_id + 1
+                                continue
+                        else:
+                            response = []
 
-                bot.send_markdown_message(chat_id, output)
+                        if len(response) > 0:
 
-            # ========================= INFORMATION ======================== #
-            elif arguments[0] == '!info' and len(arguments) == 2:
+                            # Return only 12 values
+                            cut_point = int(len(response)/11)
+                            response = response[0::cut_point]
 
-                # Convert spaces in the name of the coin into hyphens
-                coin = arguments[1].strip().replace(' ', '-')
+                            # Build the response
+                            output = 'Evolution of *' + \
+                                     evolution_args[2].strip() + \
+                                     '* in the last ' + days + ' day(s)' +\
+                                     ' ' + emoji_map[currency] + '\n\n'
+                            for index, price in enumerate(response):
 
-                try:
-                    response = coinGecko.coin_info(coin)
-                except:
-                    logging.warning('CoinGecko API failed [Coin info]')
-                    output = 'The service is unavailable, try again later'
-                    bot.send_message(chat_id, output)
+                                # Convert the time deleting milliseconds
+                                timestamp = str(price[0])[0: 10]
+                                date = datetime.datetime \
+                                    .fromtimestamp(float(timestamp)) \
+                                    .strftime('%d/%m/%Y -- %H:%M')
 
-                    # Update the offset
-                    current_offset = update_id + 1
-                    continue
+                                # Check if the price has increased or not
+                                if index > 0:
+                                    previous = response[index-1][1]
+                                    current = response[index][1]
+                                    if previous > current:
+                                        tendency = '⬇️'
+                                    elif previous < current:
+                                        tendency = '⬆️'
+                                    else:
+                                        tendency = '➡️'
+                                else:
+                                    tendency = '⏹️'
 
-                if len(response) > 0:
-                    output = '*' + response['name'] + \
-                        ' (' + response['symbol'] + ')*\n\n'
+                                # Get all together
+                                output = output + \
+                                    '_' + str(date) + '_\n' + \
+                                    tendency + ' ' + \
+                                    formatNumber(price[1]) + ' ' + \
+                                    sign_map[currency] + '\n\n'
 
-                    links = response['links']
-                    twitter_url = links['twitter_screen_name']
-                    if len(twitter_url) > 0:
-                        twitter_url = 'https://twitter.com/' + twitter_url
+                            bot.send_markdown_message(chat_id, output)
+                            logging.debug('OK !evolution ' +
+                                          '[Chat: ' + str(chat_id) + ']')
+                        else:
+                            output = 'Invalid format'
+                            bot.send_message(chat_id, output)
+                            logging.debug('BAD !evolution ' +
+                                          '[Chat: ' + str(chat_id) + ']')
+                    else:
+                        output = 'Invalid format'
+                        bot.send_message(chat_id, output)
+                        logging.debug('BAD !evolution ' +
+                                      '[Chat: ' + str(chat_id) + ']')
 
-                    facebook_url = links['facebook_username']
-                    if len(facebook_url) > 0:
-                        facebook_url = 'https://www.facebook.com/' + \
-                            facebook_url
+                # ================ MARKET CHART WITH IMAGE ================= #
+                elif arguments[0] == '!evolution_img':
 
-                    telegram_channel = links['telegram_channel_identifier']
-                    if len(telegram_channel) > 0:
-                        telegram_channel = '@' + telegram_channel
+                    # evolution_args[0] -> days
+                    # evolution_args[1] -> currency
+                    # evolution_args[2] -> coin
+                    evolution_args = arguments[1].strip().split(" ", 2)
 
-                    output = output + \
-                        'Webpage: ' + links['homepage'][0] + '\n' + \
-                        'Twitter: ' + twitter_url + '\n' + \
-                        'Facebook: ' + facebook_url + '\n' + \
-                        'Telegram: ' + telegram_channel + '\n' + \
-                        'Subreddit: ' + links['subreddit_url'] + '\n\n'
+                    if len(evolution_args) == 3:
+                        days = evolution_args[0]
+                        currency = evolution_args[1]
+                        coin = evolution_args[2].strip().replace(' ', '-')
 
-                    if response['genesis_date'] is not None:
-                        inverted_date = response['genesis_date']
-                        correct_date = datetime.datetime \
-                            .strptime(inverted_date, '%Y-%m-%d') \
-                            .strftime('%d/%m/%Y')
+                        if currency in sign_map:
+
+                            try:
+                                response = coinGecko.market_chart(
+                                    coin, currency, days
+                                )
+                            except:
+                                logging.warning('CoinGecko API failed ' +
+                                                '[Market chart]')
+                                output = 'The service is unavailable, ' + \
+                                    'try again later'
+                                bot.send_message(chat_id, output)
+
+                                # Update the offset
+                                current_offset = update_id + 1
+                                continue
+                        else:
+                            response = []
+
+                        if len(response) > 0:
+                            x = []
+                            y = []
+
+                            for point in response:
+
+                                # Convert the time deleting milliseconds
+                                timestamp = str(point[0])[0: 10]
+                                date = datetime.datetime \
+                                    .fromtimestamp(float(timestamp))
+
+                                # Add values to x-axis and y-axis
+                                x.append(date)
+                                y.append(point[1])
+
+                            plt.plot(x, y)
+                            title = 'Evolution of ' + \
+                                    evolution_args[2].strip() + \
+                                    ' in the last ' + days + ' day(s)'
+                            plt.title(title)
+                            plt.ylabel(currency)  # y-axis showing currency
+                            plt.xticks(rotation=90)  # Fit values in x-axis
+                            plt.tight_layout()  # Give enough room to the graph
+                            plt.savefig('graph.png')  # Save file to send
+                            photo = open('graph.png', 'rb')  # Open file saved
+                            bot.send_photo(chat_id, photo)
+                            logging.debug('OK !evolution_img ' +
+                                          '[Chat: ' + str(chat_id) + ']')
+                            photo.close()  # Free resources
+                            plt.clf()  # Clear graph
+                        else:
+                            output = 'Invalid format'
+                            bot.send_message(chat_id, output)
+                            logging.debug('BAD !evolution_img ' +
+                                          '[Chat: ' + str(chat_id) + ']')
+                    else:
+                        output = 'Invalid format'
+                        bot.send_message(chat_id, output)
+                        logging.debug('BAD !evolution_img ' +
+                                      '[Chat: ' + str(chat_id) + ']')
+
+                # ====================== PRICE CHANGE ====================== #
+                elif arguments[0] == '!price_change':
+
+                    # price_change[0] -> interval
+                    # price_change[1] -> coin
+                    price_change = arguments[1].strip().split(" ", 1)
+
+                    if len(price_change) == 2:
+                        interval = price_change[0]
+                        allowed_interval = {'1h', '24h', '7d', '14d',
+                                            '30d', '60d', '200d', '1y'}
+                        coin = price_change[1].strip().replace(' ', '-')
+                        if interval in allowed_interval:
+
+                            try:
+                                response = coinGecko.market_data(coin)
+                            except:
+                                logging.warning('CoinGecko API failed ' +
+                                                '[Market data]')
+                                output = 'The service is unavailable, ' + \
+                                    'try again later'
+                                bot.send_message(chat_id, output)
+
+                                # Update the offset
+                                current_offset = update_id + 1
+                                continue
+
+                            if len(response) > 0:
+                                data = response['price_change_percentage_' +
+                                                interval +
+                                                '_in_currency']
+                                output = 'Price change of *' + coin + \
+                                         '* in the last _' + interval + '_:\n'
+
+                                # Build the response
+                                for currency in data:
+                                    if currency in sign_map:
+                                        value = formatNumber(data[currency]) +\
+                                            '%'
+                                        if data[currency] > 0:
+                                            value = '+' + value
+                                        output = output + \
+                                            emoji_map[currency] + ' ' + \
+                                            value + ' ' + \
+                                            sign_map[currency] + \
+                                            '\n'
+                                logging.debug('OK !price_change ' +
+                                              '[Chat: ' + str(chat_id) + ']')
+                            else:
+                                output = '*' + coin + '* not found'
+                                logging.debug('BAD !price_change ' +
+                                              '[Chat: ' + str(chat_id) + ']')
+                        else:
+                            output = 'Interval must be ' + \
+                                    '`1h`, `24h`, `7d`, `24d`, `30d`, ' + \
+                                    '`60d`, `200d` or `1y`'
+                            logging.debug('BAD !price_change ' +
+                                          '[Chat: ' + str(chat_id) + ']')
+
+                        bot.send_markdown_message(chat_id, output)
+                    else:
+                        output = 'Invalid format'
+                        bot.send_message(chat_id, output)
+                        logging.debug('BAD !price_change ' +
+                                      '[Chat: ' + str(chat_id) + ']')
+
+                # =========== 24H TOP CRYPTOCURRENCIES WITH IMAGE ========== #
+                elif arguments[0] == '!top_coins':
+                    currency = arguments[1]
+
+                    if currency in sign_map:
+                        try:
+                            response = coinGecko.coins_markets(currency, 10)
+                        except:
+                            logging.warning('CoinGecko API failed [Top coins]')
+                            output = 'The service is unavailable, ' + \
+                                'try again later'
+                            bot.send_message(chat_id, output)
+
+                            # Update the offset
+                            current_offset = update_id + 1
+                            continue
+
+                        x = []
+                        y = []
+                        colors = []
+
+                        for crypto in response:
+                            x.append(crypto['name'])
+                            change = crypto['price_change_percentage_24h']
+                            y.append(change)
+                            if change < 0:
+                                colors.append('r')  # Red color
+                            else:
+                                colors.append('g')  # Green color
+
+                        plt.bar(x, y, color=colors)
+                        plt.title('24 hours price change of the' +
+                                  ' top 10 cryptocurrencies')
+                        plt.ylabel('% in ' + currency)
+                        plt.xticks(rotation=90)  # Fit long names in x-axis
+                        plt.tight_layout()  # Give enough room to the graph
+                        plt.savefig('graph.png')  # Save file to send
+                        photo = open('graph.png', 'rb')  # Open file saved
+                        bot.send_photo(chat_id, photo)
+                        logging.debug('OK !top_coins ' +
+                                      '[Chat: ' + str(chat_id) + ']')
+                        photo.close()  # Free resources
+                        plt.clf()  # Clear graph
+                    else:
+                        output = "The currency must be chf, inr, eur, " + \
+                            "cad, aud, gbp or usd"
+                        bot.send_message(chat_id, output)
+                        logging.debug('BAD !top_coins ' +
+                                      '[Chat: ' + str(chat_id) + ']')
+
+                # ======================= MARKET CAP ======================= #
+                elif arguments[0] == '!market_cap':
+
+                    # Convert spaces in the name of the coin into hyphens
+                    coin = arguments[1].strip().replace(' ', '-')
+
+                    try:
+                        response = coinGecko.market_data(coin)
+                    except:
+                        logging.warning('CoinGecko API failed ' +
+                                        '[Market data]')
+                        output = 'The service is unavailable, try again later'
+                        bot.send_message(chat_id, output)
+
+                        # Update the offset
+                        current_offset = update_id + 1
+                        continue
+
+                    if len(response) > 0:
+                        data = response['market_cap']
+                        output = 'The current *' + coin + '* market cap is:\n'
+
+                        # Build the response
+                        for currency in data:
+                            if currency in sign_map:
+                                output = output + \
+                                    emoji_map[currency] + ' ' + \
+                                    formatNumber(data[currency]) + ' ' + \
+                                    sign_map[currency] + \
+                                    '\n'
+                        logging.debug('OK !market_cap ' +
+                                      '[Chat: ' + str(chat_id) + ']')
+                    else:
+                        output = arguments[1] + ' not found'
+                        logging.debug('BAD !market_cap ' +
+                                      '[Chat: ' + str(chat_id) + ']')
+
+                    bot.send_markdown_message(chat_id, output)
+
+                # ========================= SUPPLY ========================= #
+                elif arguments[0] == '!supply':
+
+                    # Convert spaces in the name of the coin into hyphens
+                    coin = arguments[1].strip().replace(' ', '-')
+
+                    try:
+                        response = coinGecko.market_data(coin)
+                    except:
+                        logging.warning('CoinGecko API failed ' +
+                                        '[Market data]')
+                        output = 'The service is unavailable, try again later'
+                        bot.send_message(chat_id, output)
+
+                        # Update the offset
+                        current_offset = update_id + 1
+                        continue
+
+                    if len(response) > 0:
+                        circulating = response['circulating_supply']
+                        output = 'Currently, there are ' + \
+                                 formatNumber(circulating) + ' *' + coin + '*.'
+                        total = response['total_supply']
+
+                        # Additional info if the crypto has finite supply
+                        if total is not None:
+                            percentage = (circulating/total)*100
+                            output = output + ' The supply stops at ' + \
+                                formatNumber(total) + ' *' + coin + '*.'
+                            output = output + ' That means ' + \
+                                formatNumber(percentage) + '% of *' + coin + \
+                                '* has been issued.'
+                        logging.debug('OK !supply ' +
+                                      '[Chat: ' + str(chat_id) + ']')
+                    else:
+                        output = '*' + arguments[1] + '* not found'
+                        logging.debug('BAD !supply ' +
+                                      '[Chat: ' + str(chat_id) + ']')
+
+                    bot.send_markdown_message(chat_id, output)
+
+                # ======================= INFORMATION ====================== #
+                elif arguments[0] == '!info':
+
+                    # Convert spaces in the name of the coin into hyphens
+                    coin = arguments[1].strip().replace(' ', '-')
+
+                    try:
+                        response = coinGecko.coin_info(coin)
+                    except:
+                        logging.warning('CoinGecko API failed [Coin info]')
+                        output = 'The service is unavailable, try again later'
+                        bot.send_message(chat_id, output)
+
+                        # Update the offset
+                        current_offset = update_id + 1
+                        continue
+
+                    if len(response) > 0:
+                        output = '*' + response['name'] + \
+                            ' (' + response['symbol'] + ')*\n\n'
+
+                        links = response['links']
+                        twitter_url = links['twitter_screen_name']
+                        if len(twitter_url) > 0:
+                            twitter_url = 'https://twitter.com/' + twitter_url
+
+                        facebook_url = links['facebook_username']
+                        if len(facebook_url) > 0:
+                            facebook_url = 'https://www.facebook.com/' + \
+                                facebook_url
+
+                        telegram_channel = links['telegram_channel_identifier']
+                        if len(telegram_channel) > 0:
+                            telegram_channel = '@' + telegram_channel
+
                         output = output + \
-                            '- Genesis date: ' + correct_date + '\n'
+                            'Webpage: ' + links['homepage'][0] + '\n' + \
+                            'Twitter: ' + twitter_url + '\n' + \
+                            'Facebook: ' + facebook_url + '\n' + \
+                            'Telegram: ' + telegram_channel + '\n' + \
+                            'Subreddit: ' + links['subreddit_url'] + '\n\n'
 
-                    output = output + \
-                        '- CoinGecko rank: ' + \
-                        str(response['coingecko_rank']) + '\n'
+                        if response['genesis_date'] is not None:
+                            inverted_date = response['genesis_date']
+                            correct_date = datetime.datetime \
+                                .strptime(inverted_date, '%Y-%m-%d') \
+                                .strftime('%d/%m/%Y')
+                            output = output + \
+                                '- Genesis date: ' + correct_date + '\n'
 
-                    output = output + \
-                        '- Block time: ' + \
-                        str(response['block_time_in_minutes']) + ' minutes\n'
+                        output = output + \
+                            '- CoinGecko rank: ' + \
+                            str(response['coingecko_rank']) + '\n'
 
-                    logging.debug('OK !info ' +
-                                  '[Chat: ' + str(chat_id) + ']')
+                        output = output + \
+                            '- Block time: ' + \
+                            str(response['block_time_in_minutes']) + \
+                            ' minutes\n'
+
+                        logging.debug('OK !info ' +
+                                      '[Chat: ' + str(chat_id) + ']')
+                    else:
+                        output = '*' + arguments[1] + '* not found'
+                        logging.debug('BAD !info ' +
+                                      '[Chat: ' + str(chat_id) + ']')
+
+                    bot.send_markdown_message(chat_id, output)
+
                 else:
-                    output = '*' + arguments[1] + '* not found'
-                    logging.debug('BAD !info ' +
+                    logging.debug('Unknown command ' +
                                   '[Chat: ' + str(chat_id) + ']')
-
-                bot.send_markdown_message(chat_id, output)
+                    output = 'Invalid format'
+                    bot.send_message(chat_id, output)
 
             else:
-                logging.debug('Unknown command ' +
+                logging.debug('Incomplete command ' +
                               '[Chat: ' + str(chat_id) + ']')
                 output = 'Invalid format'
                 bot.send_message(chat_id, output)
