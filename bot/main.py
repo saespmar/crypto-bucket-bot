@@ -454,7 +454,7 @@ def main():
                         logging.debug('OK !market_cap ' +
                                       '[Chat: ' + str(chat_id) + ']')
                     else:
-                        output = arguments[1] + ' not found'
+                        output = '*' + arguments[1] + '* not found'
                         logging.debug('BAD !market_cap ' +
                                       '[Chat: ' + str(chat_id) + ']')
 
